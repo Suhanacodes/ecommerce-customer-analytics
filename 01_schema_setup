@@ -1,0 +1,42 @@
+-- 1. Create the Database
+CREATE DATABASE ecommerce_analytics_db;
+USE ecommerce_analytics_db;
+
+-- 2. Create Customers Table
+CREATE TABLE Customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    signup_date DATE NOT NULL,
+    city VARCHAR(50),
+    membership_tier VARCHAR(20) DEFAULT 'Bronze'
+);
+
+-- 3. Create Products Table
+CREATE TABLE Products (
+    product_id INT AUTO_INCREMENT PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL,
+    category VARCHAR(50),
+    price DECIMAL(10, 2) NOT NULL,
+    stock_quantity INT DEFAULT 0
+);
+
+-- 4. Create Orders Table
+CREATE TABLE Orders (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_id INT,
+    order_date DATE NOT NULL,
+    payment_method VARCHAR(30),
+    FOREIGN KEY (customer_id) REFERENCES Customers(customer_id) ON DELETE CASCADE
+);
+
+-- 5. Create Order_Items Table
+CREATE TABLE Order_Items (
+    item_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT,
+    product_id INT,
+    quantity INT NOT NULL,
+    discount_applied DECIMAL(5, 2) DEFAULT 0.00,
+    FOREIGN KEY (order_id) REFERENCES Orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES Products(product_id) ON DELETE CASCADE
+);
+SHOW TABLES;

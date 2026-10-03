@@ -1,0 +1,56 @@
+USE ecommerce_analytics_db;
+
+-- ====================================================================
+-- VIEW 1: Customer Lifetime Value (CLV) & Spend Summary
+-- Purpose: Identifies your most valuable customers and metrics per user.
+-- ====================================================================
+CREATE OR REPLACE VIEW v_customer_lifetime_value AS
+SELECT 
+    c.customer_id,
+    c.first_name,
+    c.membership_tier,
+    c.city,
+    COUNT(DISTINCT o.order_id) AS total_orders_placed,
+    -- Calculates exact total spend: (Price * Quantity) minus the percentage discount
+    ROUND(SUM((p.price * oi.quantity) * (1 - (oi.discount_applied / 100))), 2) AS total_lifetime_spend
+FROM Customers c
+LEFT JOIN Orders o ON c.customer_id = o.customer_id
+LEFT JOIN Order_Items oi ON o.order_id = oi.order_id
+LEFT JOIN Products p ON oi.product_id = p.product_id
+GROUP BY c.customer_id, c.first_name, c.membership_tier, c.city;
+
+
+-- ====================================================================
+-- VIEW 2: Product Performance & Category Insights
+-- Purpose: Tracks total revenue generated and stock depletion rates per product.
+-- ====================================================================
+CREATE OR REPLACE VIEW v_product_performance AS
+SELECT 
+    p.product_id,
+    p.product_name,
+    p.category,
+    p.price,
+    p.stock_quantity AS current_stock_available,
+    IFNULL(SUM(oi.quantity), 0) AS total_units_sold,
+    ROUND(IFNULL(SUM((p.price * oi.quantity) * (1 - (oi.discount_applied / 100))), 0), 2) AS total_revenue_generated
+FROM Products p
+LEFT JOIN Order_Items oi ON p.product_id = oi.product_id
+GROUP BY p.product_id, p.product_name, p.category, p.price, p.stock_quantity;
+
+
+-- ====================================================================
+-- VIEW 3: Executive Sales Dashboard Metrics
+-- Purpose: Provides high-level daily trends for executive reporting.
+-- ====================================================================
+CREATE OR REPLACE VIEW v_daily_executive_summary AS
+SELECT 
+    o.order_date,
+    COUNT(DISTINCT o.order_id) AS total_transactions,
+    SUM(oi.quantity) AS total_items_sold,
+    ROUND(SUM((p.price * oi.quantity) * (1 - (oi.discount_applied / 100))), 2) AS gross_revenue,
+    ROUND(AVG((p.price * oi.quantity) * (1 - (oi.discount_applied / 100))), 2) AS average_order_value
+FROM Orders o
+JOIN Order_Items oi ON o.order_id = oi.order_id
+JOIN Products p ON oi.product_id = p.product_id
+GROUP BY o.order_date;
+show tables;
